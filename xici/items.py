@@ -15,3 +15,14 @@ class XiciItem(scrapy.Item):
     content = scrapy.Field()
     inputtime = scrapy.Field()
     #pass
+
+
+class ProxyItem(scrapy.Item):
+    ip = scrapy.Field()
+    port = scrapy.Field()
+    position = scrapy.Field()
+    http_type = scrapy.Field()
+    speed = scrapy.Field()
+    connect_time = scrapy.Field()
+    check_time = scrapy.Field()
+    error_time = scrapy.Field()

@@ -1,65 +1,61 @@
-# -*- coding: utf-8 -*-
 import scrapy
-from bs4 import BeautifulSoup
-
-from xici.items import XiciItem
+from xici.items import ProxyItem
 
 
-class TestSpider(scrapy.Spider):
-    name = 'weixin2'
-    #start_urls = ['http://epaper.21jingji.com/html/2017-01/23/node_1.htm']
+class XiciSpider(scrapy.Spider):
+    name = "xici"
+    allowed_domains = ["xicidaili.com"]
+    start_urls = (
+        'http://www.xicidaili.com',
+    )
+    meta = {'how': 'ok'}
+
+    '''
+    改为客户配置:scrapy配置等级default > project > custom
+    '''
+    custom_settings = {
+        'DOWNLOADER_MIDDLEWARES': {
+            'scrapy.downloadermiddlewares.retry.RetryMiddleware': 90,
+            'xici.middlewares.myRandomProxy': None,  # 从数据库读取可用代理IP
+            'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 110,
+            'xici.middlewares.XiciSpiderMiddleware': 400,  # phantomjs模拟浏览器返回response
+        },
+        'ITEM_PIPELINES': {
+            # 'xici.pipelines.XiciPipeline': 300,
+            'xici.pipelines.ProxyPipeline': 300,
+            # 'scrapy_redis.pipelines.RedisPipeline': 400,
+        },
+        'SCHEDULER':'scrapy.core.scheduler.Scheduler',
+        'DUPEFILTER_CLASS':'scrapy.dupefilters.RFPDupeFilter',
+        'SCHEDULER_PERSIST':None,
+        'SCHEDULER_QUEUE_CLASS':None
+    }
+
+    # print(scrapy.settings.default_settings)
 
     def start_requests(self):
-        meta = {'how': 'ok'}
-        link = 'http://epaper.21jingji.com/html/2017-01/23/node_1.htm'
-        yield scrapy.Request(link, meta=meta,callback=self.parse_url_list)
+        '''需爬取的链接'''
+        reqs = []
 
+        for i in range(1, 2):
+            req = scrapy.Request("http://www.xicidaili.com/nn/%s" % i,meta=self.meta)
+            reqs.append(req)
 
-    def parse_url_list(self,response):
-        url_list = response.xpath("//div[@class='news_list']/ul/li/a/@href").extract()
-        print(url_list)
-        items = []
-        meta = {'how': 'ok'}
-        i = 0
-        for url in url_list:
-            if i<5:
-                #++i
-                i = i+1
-                href = 'http://epaper.21jingji.com/html/2017-01/23/%s' % url
-                yield scrapy.Request(href,meta=meta, callback=self.parse_url_itme)
-            else:
-                break
+        return reqs
 
+    def parse(self, response):
+        #打印全局的默认配置
+        #print("Existing settings: %s" % self.settings.attributes.keys())
 
-    def parse_url_itme(self,response):
-        result = XiciItem()
-        #result = {}
-        #body = selenium_request(href)
-        #print(response.body)
-        soup = BeautifulSoup(response.body, "lxml")
-        title_tag = soup.find_all("h1")
-        title = title_tag[1].text.strip()
-        if title:
-            result['url'] = response.url
-            result['title'] = title
-            print(response.url,title_tag)
-            yield result
-
-
-
-    def parse_scrapy(self, response):
-        url_list = response.xpath("//div[@class='news_list']/ul/li/a/@href").extract()
-        items = []
-        for url in url_list:
-            href = 'http://epaper.21jingji.com/html/2017-01/23/%s' % url
-            yield scrapy.Request(href, callback=self.parse_scrapy_item)
-
-
-
-    def parse_scrapy_item(self, response):
-        result = XiciItem()
-        url  =  response.url
-        title = response.xpath('//h1[2]//text()').extract()
-        result['url'] = url
-        result['title'] = title[0]
-        yield result
+        trs = response.xpath('//table[@id="ip_list"]/tbody/tr')
+        item = ProxyItem()
+        for tr in trs[1:]:
+            item['ip'] = tr.xpath('td[2]/text()')[0].extract()
+            item['port'] = tr.xpath('td[3]/text()')[0].extract()
+            item['position'] = tr.xpath('string(td[4])')[0].extract().strip()
+            item['http_type'] = tr.xpath('td[6]/text()')[0].extract()
+            item['speed'] = tr.xpath('td[7]/div[@class="bar"]/@title').re('\d{0,2}\.\d{0,}')[0]
+            item['connect_time'] = tr.xpath('td[8]/div[@class="bar"]/@title').re('\d{0,2}\.\d{0,}')[0]
+            item['check_time'] = tr.xpath('td[10]/text()')[0].extract()
+            item['error_time'] = 0
+            yield  item

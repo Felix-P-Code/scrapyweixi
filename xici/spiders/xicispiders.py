@@ -2,12 +2,14 @@
 import scrapy
 from xici.items import XiciItem
 from bs4 import BeautifulSoup
+from scrapy_redis.spiders import RedisSpider
 
 class XiciSpider(scrapy.Spider):
     name = 'weixin'
     start_urls = ['http://weixin.sogou.com/weixin?type=1&query=mycaijing&ie=utf8&_sug_=n&_sug_type_=']
     meta = {'how': 'ok'}
     first_url = ''
+    redis_key = 'weixin:start_urls'
 
     def parse(self, response):
         sel = scrapy.Selector(response)
@@ -23,10 +25,9 @@ class XiciSpider(scrapy.Spider):
         wait_text = sel.xpath("//p[@id='loading']//text()").extract()
         if wait_text:
             #验证码
-            #response.url
             meta = response.meta
             meta['isscreen'] = 1
-            #url = '%s++++' % response.url #scrapy 有默认URL排重，不能有重复的url去请求
+            #scrapy 有默认URL排重，不能有重复的url去请求
             yield scrapy.Request(response.url, meta=meta, callback=self.parse_validate,dont_filter=True)
         else:
             #正常分析html采集
@@ -45,13 +46,10 @@ class XiciSpider(scrapy.Spider):
 
     def parse_item(self,response):
         result = XiciItem()
-        #sel = scrapy.Selector(response)
         url = response.url
         soup = BeautifulSoup(response.body,'lxml')
         title = soup.find('h2',id="activity-name").string
         content = soup.find('div',id="js_content")
-        #print(title)
-        #title = sel.xpath("//h2[@id='activity-name']//text()").extract()
         result['url'] = url
         result['title'] = title.strip()
         result['content'] = content

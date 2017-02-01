@@ -41,13 +41,23 @@ class XiciPipeline(object):
 class MongoPipeline(object):
     # connnect databases
     conn = MongoClient('localhost', 27017)
-    # 或者
-    conn = MongoClient('mongodb://localhost:27017/')
     db = conn.scrapy  # 连接数据库
 
     # pipeline default function
     def process_item(self, item, spider):
         item['inputtime'] = int(time.time())
         self.db.news.insert(dict(item))  # json convert to dict
+
+        return item
+
+
+class ProxyPipeline(object):
+    # connnect databases
+    conn = MongoClient('localhost', 27017)
+    db = conn.scrapy  # 连接数据库
+
+    # pipeline default function
+    def process_item(self, item, spider):
+        self.db.proxy.insert(dict(item))  # json convert to dict
 
         return item
