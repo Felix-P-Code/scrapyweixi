@@ -69,7 +69,8 @@ DOWNLOADER_MIDDLEWARES = {
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   'xici.pipelines.XiciPipeline': 300,
+   #'xici.pipelines.XiciPipeline': 300,
+   'xici.pipelines.MongoPipeline': 300,
 }
 LOG_LEVEL = 'INFO'
 

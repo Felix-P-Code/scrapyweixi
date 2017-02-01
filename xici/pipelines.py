@@ -6,6 +6,7 @@
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 import time
 import pymysql
+from pymongo import MongoClient
 
 def dbHandle():
     conn = pymysql.connect(
@@ -33,5 +34,20 @@ class XiciPipeline(object):
         except Exception as e:
             #print e
             dbObject.rollback()
+
+        return item
+
+
+class MongoPipeline(object):
+    # connnect databases
+    conn = MongoClient('localhost', 27017)
+    # 或者
+    conn = MongoClient('mongodb://localhost:27017/')
+    db = conn.scrapy  # 连接数据库
+
+    # pipeline default function
+    def process_item(self, item, spider):
+        item['inputtime'] = int(time.time())
+        self.db.news.insert(dict(item))  # json convert to dict
 
         return item

@@ -13,4 +13,5 @@ class XiciItem(scrapy.Item):
     url = scrapy.Field()
     title = scrapy.Field()
     content = scrapy.Field()
+    inputtime = scrapy.Field()
     #pass

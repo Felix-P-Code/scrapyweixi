@@ -52,7 +52,7 @@ def selenium_request(url ,isscreen = False):
         elem.send_keys(varidate_code)
         #elem.send_keys(Keys.ENTER)  #点击键盘上的Enter按钮
         driver.find_element_by_id('bt').click()  # 点击了百度页面上的‘百度一下’按钮
-        #driver.refresh()
+        driver.refresh()
 
     driver.implicitly_wait(2)
     time.sleep(1)

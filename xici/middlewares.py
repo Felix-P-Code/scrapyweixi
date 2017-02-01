@@ -9,11 +9,12 @@ class XiciSpiderMiddleware(object):
     def process_request(self, request, spider):
         # flag = False
         # #print(request.meta.has_key('isscreen'))
-        # for d, v in enumerate(request.meta):
+        # for d, v in en umerate(request.meta):
         #     if v == 'how':
         #         print(d,'---',v)
         #         flag = True
         #         break
+
 
         if 'how' in request.meta:
 

@@ -7,14 +7,16 @@ class XiciSpider(scrapy.Spider):
     name = 'weixin'
     start_urls = ['http://weixin.sogou.com/weixin?type=1&query=mycaijing&ie=utf8&_sug_=n&_sug_type_=']
     meta = {'how': 'ok'}
+    first_url = ''
 
     def parse(self, response):
         sel = scrapy.Selector(response)
         #print(sel.xpath('//title').extract())
         fligint_div = "//ul[@class='news-list2']/li[1]/div[@class='gzh-box2']/div[@class='img-box']/a[1]/@href"
         first_url_list = sel.xpath(fligint_div).extract()
-        first_url = first_url_list[0]
-        yield  scrapy.Request(first_url,meta=self.meta, callback=self.parse_url_list)
+        self.first_url = first_url_list[0]
+        print(self.first_url)
+        yield  scrapy.Request(self.first_url,meta=self.meta, callback=self.parse_url_list)
 
     def parse_url_list(self,response):
         sel = scrapy.Selector(response)
@@ -24,8 +26,8 @@ class XiciSpider(scrapy.Spider):
             #response.url
             meta = response.meta
             meta['isscreen'] = 1
-            url = '%s++++' % response.url #scrapy 有默认URL排重，不能有重复的url去请求
-            yield scrapy.Request(url, meta=meta, callback=self.parse_validate)
+            #url = '%s++++' % response.url #scrapy 有默认URL排重，不能有重复的url去请求
+            yield scrapy.Request(response.url, meta=meta, callback=self.parse_validate,dont_filter=True)
         else:
             #正常分析html采集
             url_list = sel.xpath("//h4[@class='weui_media_title']/@hrefs").extract()
@@ -37,7 +39,8 @@ class XiciSpider(scrapy.Spider):
 
 
     def parse_validate(self,response):
-        yield scrapy.Request(response.url, meta=self.meta, callback=self.parse_url_list)
+        print(response.xpath('//body').extract())
+        yield scrapy.Request(self.first_url, meta=self.meta, callback=self.parse_url_list,dont_filter=True)
 
 
     def parse_item(self,response):
