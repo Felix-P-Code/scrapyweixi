@@ -6,6 +6,16 @@ from pymongo import MongoClient
 from scrapy.utils.response import response_status_message
 from scrapy.downloadermiddlewares.retry import RetryMiddleware
 
+
+
+import re
+import random
+import base64
+import logging
+log = logging.getLogger('scrapy.proxies')
+
+
+
 class XiciSpiderMiddleware(object):
 
     def process_request(self, request, spider):
@@ -34,8 +44,9 @@ class myRetryMiddleware(RetryMiddleware):
                 ip = request.meta['proxy'].replace('http://', '')
                 iplist = ip.split(':')
                 ip = iplist[0]
-                conn = MongoClient('localhost', 27017)
+                print(ip)
 
+                conn = MongoClient('localhost', 27017)
                 db = conn.scrapy  # 连接数据库
                 result = db.proxy.find_one({'ip': ip})
                 error_time = result['error_time'] + 1
@@ -75,11 +86,17 @@ class myRandomProxy(RandomProxy):
         #     self.proxies[parts.group(1) + parts.group(3)] = user_pass
         #
         # fin.close()
-        conn = MongoClient('localhost', 27017)
-        db = conn.scrapy  # 连接数据库
-        items = {}
-        for item in db.proxy.find({"error_time": {'$gte': 0, '$lt': 4}}):
-            key = 'http://%s:%s' % (item['ip'], item['port'])
-            items[key] = ''
+        # conn = MongoClient('localhost', 27017)
+        # db = conn.scrapy  # 连接数据库
+        # items = {}
+        # for item in db.proxy.find({"error_time": {'$gte': 0, '$lt': 4}}):
+        #     key = 'http://%s:%s' % (item['ip'], item['port'])
+        #     items[key] = ''
+        #
+        # print(items)
+        # self.proxies = items
+        self.proxies = {'http://111.76.133.177:808':''}
 
-        self.proxies = items
+
+
+

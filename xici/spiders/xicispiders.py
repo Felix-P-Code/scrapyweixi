@@ -2,9 +2,10 @@
 import scrapy
 from xici.items import XiciItem
 from bs4 import BeautifulSoup
-from scrapy_redis.spiders import RedisSpider
+#from scrapy_redis.spiders import RedisSpider
 
 class XiciSpider(scrapy.Spider):
+#class XiciSpider(RedisSpider):
     name = 'weixin'
     start_urls = ['http://weixin.sogou.com/weixin?type=1&query=mycaijing&ie=utf8&_sug_=n&_sug_type_=']
     meta = {'how': 'ok'}
@@ -49,7 +50,10 @@ class XiciSpider(scrapy.Spider):
         url = response.url
         soup = BeautifulSoup(response.body,'lxml')
         title = soup.find('h2',id="activity-name").string
-        content = soup.find('div',id="js_content")
+        content = soup.find('div',id="js_content").text
+        #print(content)
+        print(type(content))
+        #exit()
         result['url'] = url
         result['title'] = title.strip()
         result['content'] = content

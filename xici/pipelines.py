@@ -46,6 +46,7 @@ class MongoPipeline(object):
     # pipeline default function
     def process_item(self, item, spider):
         item['inputtime'] = int(time.time())
+        print(item)
         self.db.news.insert(dict(item))  # json convert to dict
 
         return item
